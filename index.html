@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SYSAT · Cámaras de seguridad e instalación</title>
+<meta name="description" content="SYSAT Servicios en Tecnología: cámaras Hikvision, EZVIZ y Grandstream con instalación. Elige tus cámaras y cotiza por WhatsApp.">
+<link rel="stylesheet" href="codigo/estilos.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="marca" href="index.html"><span class="logo"></span><span>SYSAT<small>Servicios en Tecnología</small></span></a>
+  <div class="enlaces">
+    <a href="catalogo.html">Catálogo</a><a href="#ofertas">Ofertas</a><a href="#kit">Arma tu kit</a><a href="#trabajos">Trabajos</a><a href="#contacto">Contacto</a>
+    <button class="btn-carrito" aria-label="Ver mi selección">🛒 <span class="txt">Mi selección</span> <span class="num">0</span></button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="fila">
+    <div>
+      <h1 id="titulo">Elige tu cámara.</h1>
+      <p class="lema">Gira la plataforma, mira cada modelo de cerca, arma tu selección y cotízala por WhatsApp. Instalación incluida.</p>
+      <div class="acciones"><a class="cotizar" href="catalogo.html">VER LOS 56 PRODUCTOS ›</a><a class="btn-borde" href="#kit">Arma tu kit</a></div>
+      <div class="chips"><span>Hikvision</span><span>EZVIZ</span><span>Grandstream</span><span>Instalación incluida</span></div>
+    </div>
+    <div class="lienzo" id="lienzo">
+      <div class="globo" id="globo">Cargando cámaras 3D…</div>
+      <div class="controles" id="controles3d"><button data-b="noche">🌙 Visión nocturna</button><button data-b="foto">📸 Tomar foto</button></div>
+      <div class="ficha3d" id="ficha3d"></div>
+    </div>
+  </div>
+</header>
+
+<main class="cuerpo">
+  <section class="seccion">
+    <div class="cabeza-sec"><div><h2>Productos destacados</h2><p class="sub">Toca <b>+</b> para agregarlos a tu selección. Precio solo por cotización.</p></div>
+    <a class="btn-borde" href="catalogo.html">Ver catálogo completo ›</a></div>
+    <div class="rejilla" id="destacados"></div>
+  </section>
+
+  <section class="seccion" id="ofertas">
+    <h2>Kits y ofertas</h2><p class="sub">Paquetes armados con instalación. Toca la del centro para verla grande.</p>
+    <p class="nota-precio">💡 Los precios de las publicidades son <b>sugeridos</b>: confirma el precio final por WhatsApp.</p>
+    <div class="cover" id="cover" tabindex="0" aria-label="Carrusel de ofertas"><button class="nav ant" id="ofAnt" aria-label="Anterior">‹</button><button class="nav sig" id="ofSig" aria-label="Siguiente">›</button></div>
+    <div class="puntos" id="ofPuntos"></div>
+    <p class="of-tit" id="ofTit"></p>
+    <div class="bajo"><button class="btn-agregar" id="ofAgregar">+ Agregar este kit</button><button class="cotizar" id="ofWsp">Cotizar por WhatsApp</button></div>
+  </section>
+
+  <section class="seccion">
+    <h2>Mira cómo ve de noche</h2><p class="sub">Arrastra la barra: a la izquierda de día, a la derecha con visión nocturna.</p>
+    <div class="noche aparece" id="noche">
+      <img src="imagenes/trabajos/camaras-05.jpg" alt="Instalación de cámara de día"><img class="ir" src="imagenes/trabajos/camaras-05.jpg" alt=""><div class="ir-ruido"></div>
+      <span class="et" style="left:12px">☀ Día</span><span class="et" style="right:12px">🌙 Visión nocturna</span>
+      <div class="linea"></div>
+    </div>
+  </section>
+
+  <section class="seccion" id="kit">
+    <h2>Arma tu kit</h2><p class="sub">Elige, mira dónde irían las cámaras y muévelas a tu gusto.</p>
+    <div class="kit2">
+      <div class="pasos">
+        <div class="paso p1"><h4><span class="pnum">1</span>¿Para dónde?</h4>
+          <div class="cards" data-g="lugar"><button class="card on" data-v="Casa"><span>🏠</span>Casa</button><button class="card" data-v="Negocio"><span>🏪</span>Negocio</button></div></div>
+        <div class="paso p2"><h4><span class="pnum">2</span>¿Cuántas cámaras?</h4>
+          <div class="desl"><output id="numV">4</output><div class="der"><input type="range" id="num" min="1" max="8" value="4" aria-label="Número de cámaras"><div class="reglas"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div><div class="txt" id="numTxt"></div></div></div></div>
+        <div class="paso p3"><h4><span class="pnum">3</span>¿Cómo las quieres?</h4>
+          <div class="cards" data-g="con"><button class="card on" data-v="WiFi"><span>📶</span>WiFi<small>Sin cables · app en tu celular</small></button><button class="card" data-v="Cable"><span>🔌</span>Cable<small>Más estable · con grabador</small></button></div></div>
+      </div>
+      <div class="escenario" id="kitEsc">
+        <div class="capa" id="kitCapa"></div>
+        <div class="cobertura"><div>Interior <b id="cobIn">0%</b><div class="barra"><i id="barIn"></i></div></div><div class="ex">Exterior <b id="cobEx">0%</b><div class="barra"><i id="barEx"></i></div></div></div>
+        <div class="leyenda"><span><i style="background:#2f6bff"></i>Interior</span><span><i style="background:#6cbf1f"></i>Exterior</span></div>
+        <div class="pista2" id="kitPista">✋ Arrastra las cámaras para moverlas</div>
+      </div>
+      <div class="resultado">
+        <h4>Tu kit sugerido</h4>
+        <div class="minis" id="kitMinis"></div>
+        <ul class="incluye" id="kitIncluye"></ul>
+        <div class="acciones-kit"><button class="btn-agregar" id="kitAgregar">+ Agregar</button><button class="cotizar" id="kitWsp">Cotizar kit</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" id="trabajos">
+    <h2>Trabajos hechos</h2><p class="sub">Instalaciones reales de SYSAT. Toca una foto para verla grande.</p>
+    <div class="filtros" id="filtrosT"></div>
+    <div class="trabajos" id="listaT"></div>
+  </section>
+
+  <section class="seccion" id="contacto">
+    <h2>Contacto</h2><p class="sub">Escríbenos y te cotizamos sin compromiso.</p>
+    <div class="contacto">
+      <a id="enlaceWsp" href="#" target="_blank" rel="noopener"><span>WhatsApp</span><b id="numWsp"></b></a>
+      <a href="mailto:cotizaciones@sysatperu.com"><span>Correo</span>cotizaciones@sysatperu.com</a>
+      <a href="https://www.sysatperu.com" target="_blank" rel="noopener"><span>Web</span>www.sysatperu.com</a>
+      <a href="https://online.flipbuilder.com/SYSAT/ymnz/" target="_blank" rel="noopener"><span>Catálogo en línea</span>Catálogo SYSAT 2023</a>
+    </div>
+  </section>
+  <footer>SYSAT · Servicios en Tecnología · Cámaras, alarmas, intercomunicadores, redes y electricidad</footer>
+</main>
+
+<script src="codigo/datos.js"></script>
+<script src="codigo/comun.js"></script>
+<script src="codigo/inicio.js"></script>
+<script src="codigo/ofertas.js"></script>
+<script src="codigo/escenas3d.min.js"></script>
+</body>
+</html>

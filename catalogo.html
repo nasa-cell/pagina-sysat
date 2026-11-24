@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo SYSAT · Cámaras y equipos</title>
+<meta name="description" content="Catálogo SYSAT: 56 cámaras y equipos Hikvision, EZVIZ y Grandstream. Busca, elige y cotiza por WhatsApp.">
+<link rel="stylesheet" href="codigo/estilos.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="marca" href="index.html"><span class="logo"></span><span>SYSAT<small>Servicios en Tecnología</small></span></a>
+  <div class="enlaces">
+    <a href="index.html">Inicio</a><a href="index.html#ofertas">Ofertas</a><a href="index.html#kit">Arma tu kit</a><a href="index.html#trabajos">Trabajos</a>
+    <button class="btn-carrito" aria-label="Ver mi selección">🛒 <span class="txt">Mi selección</span> <span class="num">0</span></button>
+  </div>
+</nav>
+
+<main class="seccion">
+  <h2>Catálogo</h2>
+  <p class="sub">Toca <b>+</b> para armar tu selección y envíala por WhatsApp. Precio solo por cotización.</p>
+  <div class="buscar">
+    <input id="q" type="search" placeholder="Busca: solar, WiFi, domo, 4MP, DS-2CD…" aria-label="Buscar producto">
+    <select id="marca" aria-label="Marca"><option value="">Todas las marcas</option></select>
+  </div>
+  <div class="filtros" id="filtros"></div>
+  <div class="conteo" id="conteo"></div>
+  <div class="rejilla" id="rejilla"></div>
+</main>
+<footer>SYSAT · Servicios en Tecnología · <a href="https://online.flipbuilder.com/SYSAT/ymnz/" target="_blank" rel="noopener">Ver catálogo en línea</a></footer>
+
+<script src="codigo/datos.js"></script>
+<script src="codigo/comun.js"></script>
+<script src="codigo/catalogo.js"></script>
+</body>
+</html>
