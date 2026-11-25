@@ -22,35 +22,65 @@ const CUARTOS = {
 };
 const MUROS = [[-5, -3.5, 5, -3.5], [-5, -3.5, -5, 3.5], [5, -3.5, 5, 3.5], [-5, 3.5, -3, 3.5], [-2, 3.5, 1.5, 3.5], [4, 3.5, 5, 3.5],
   [0, -3.5, 0, -0.7], [0, 0.7, 0, 3.5], [-5, 0, -3.2, 0], [-1.8, 0, 1.8, 0], [3.2, 0, 5, 0]];
-const SLOT_IN = [[-4.6, 3.1], [4.6, 3.1], [4.6, -3.1], [-4.6, -3.1]];
-const SLOT_EX = [[-2.5, 4.0], [2.8, 4.0], [-5.5, 0], [5.5, 0]];
+// Lugares recomendados por orden de importancia: con 1 cámara va la primera, con 2 las dos primeras, etc.
+// ang solo en las de afuera: miran en diagonal desde la esquina para cuidar dos lados a la vez.
+const Q = Math.PI / 4;
+const LUGARES = {
+  Casa: [
+    { x: -5.7, z: 4.2, ang: -Q, e: "🚪", t: "Ve la puerta de entrada", s: "Entrada" },
+    { x: 5.7, z: 4.2, ang: Math.PI + Q, e: "🚗", t: "Cuida la cochera", s: "Cochera" },
+    { x: -4.6, z: 3.1, e: "🛋", t: "Ve quién entra a la sala", s: "Sala" },
+    { x: 5.7, z: -4.2, ang: Math.PI - Q, e: "🌳", t: "Cuida el patio trasero", s: "Patio trasero" },
+    { x: 4.6, z: -3.1, e: "🍳", t: "Ve la puerta de la cocina", s: "Cocina" },
+    { x: -5.7, z: -4.2, ang: Q, e: "🧱", t: "Cuida el costado", s: "Costado" },
+    { x: 4.6, z: 3.1, e: "🚘", t: "Ve el auto por dentro", s: "Cochera adentro" },
+    { x: -0.4, z: -3.1, e: "🪟", t: "Cuida la ventana de atrás", s: "Ventana trasera" }
+  ],
+  Negocio: [
+    { x: 4.6, z: 0.4, e: "💵", t: "Vigila la caja", s: "Caja" },
+    { x: -5.7, z: 4.2, ang: -Q, e: "🚪", t: "Ve quién entra", s: "Entrada" },
+    { x: -4.6, z: 0.4, e: "🛍", t: "Ve los pasillos", s: "Tienda" },
+    { x: -0.4, z: -3.1, e: "📦", t: "Cuida la mercadería", s: "Almacén" },
+    { x: 5.7, z: -4.2, ang: Math.PI - Q, e: "🚚", t: "Ve la puerta de carga", s: "Carga" },
+    { x: 4.6, z: -3.1, e: "💼", t: "Cuida la oficina", s: "Oficina" },
+    { x: 5.7, z: 4.2, ang: Math.PI + Q, e: "🚶", t: "Ve la vereda", s: "Vereda" },
+    { x: -5.7, z: -4.2, ang: Q, e: "🧱", t: "Cuida el costado", s: "Costado" }
+  ]
+};
 const FOV_IN = 1.65, FOV_EX = 1.75, R_IN = 3.6, R_EX = 4.4;
 const dentro = (x, z) => Math.abs(x) < 5 && Math.abs(z) < 3.5;
 
 const st = { lugar: "Casa", n: 4, con: "WiFi", cams: [] };
 
 /* ---------- cámaras ---------- */
+// Las de afuera recomendadas guardan su ángulo; una cámara movida a mano toma el ángulo y el cartel del cuarto donde quedó.
 function apuntar(c) {
   c.tipo = dentro(c.x, c.z) ? "in" : "ex";
+  if (c.fija) return;
   if (c.tipo === "in") {
     const q = CUARTOS[st.lugar].find(([, , x1, x2, z1, z2]) => c.x >= x1 && c.x <= x2 && c.z >= z1 && c.z <= z2) || CUARTOS[st.lugar][0];
     c.ang = Math.atan2((q[4] + q[5]) / 2 - c.z, (q[2] + q[3]) / 2 - c.x);
+    if (c.movida) Object.assign(c, { e: q[1], t: `Cuida ${q[0].endsWith("a") ? "la" : "el"} ${q[0].toLowerCase()}`, s: q[0] });
   } else {
     c.ang = Math.abs(c.z) - 3.5 > Math.abs(c.x) - 5 ? (c.z > 0 ? Math.PI / 2 : -Math.PI / 2) : (c.x > 0 ? 0 : Math.PI);
+    if (c.movida) Object.assign(c, { e: "🏠", t: "Cuida el exterior", s: "Exterior" });
   }
 }
-function rehacer() {
-  const ni = Math.min(4, Math.ceil(st.n / 2)), ne = st.n - ni, viejas = st.cams, nuevas = [];
-  const reusar = (orig, k) => viejas.find(v => v.orig === orig && v.k === k);
-  for (let k = 0; k < ni; k++) nuevas.push(reusar("in", k) || { orig: "in", k, x: SLOT_IN[k][0], z: SLOT_IN[k][1], nueva: true });
-  for (let k = 0; k < ne; k++) nuevas.push(reusar("ex", k) || { orig: "ex", k, x: SLOT_EX[k][0], z: SLOT_EX[k][1], nueva: true });
+function recomendada(k) {
+  const l = LUGARES[st.lugar][k];
+  return { ...l, fija: l.ang !== undefined, nueva: true };
+}
+// todas = true vuelve a poner cada cámara en su lugar recomendado; si no, solo agrega o quita las del final.
+function rehacer(todas) {
+  const nuevas = [];
+  for (let k = 0; k < st.n; k++) nuevas.push(!todas && st.cams[k] ? st.cams[k] : recomendada(k));
   nuevas.forEach(apuntar); st.cams = nuevas; pintar();
 }
 function mover(i, x, z) {
   const c = st.cams[i]; if (!c) return;
   c.x = THREE.MathUtils.clamp(x, -7, 7); c.z = THREE.MathUtils.clamp(z, -5.5, 5.5);
+  c.fija = false; c.movida = true;
   apuntar(c); pintar();
-  $k("#kitPista").style.opacity = 0;
 }
 
 /* ---------- cobertura: interior = la casa; exterior = franja de 1.6 alrededor ---------- */
@@ -170,8 +200,31 @@ if (r) {
   const capa = $k("#kitCapa"), proy = new THREE.Vector3();
   function etiquetas() {
     const w = caja.clientWidth, h = caja.clientHeight, pos = (x, y, z) => { proy.set(x, y, z).project(cam); return [(proy.x + 1) / 2 * w, (1 - proy.y) / 2 * h]; };
-    capa.innerHTML = CUARTOS[st.lugar].map(([n, e, x1, x2, z1, z2]) => { const [a, b] = pos((x1 + x2) / 2, 0.9, (z1 + z2) / 2 + (z1 < 0 ? 0.6 : -0.6)); return `<span class="et" style="left:${a}px;top:${b}px">${e} ${n}</span>`; }).join("")
-      + st.cams.map((c, i) => { const [a, b] = pos(c.x, 1.25, c.z); return `<span class="nc" style="left:${a}px;top:${b}px">${i + 1}</span>`; }).join("");
+    // en celular con muchas cámaras no caben los nombres de los cuartos: cada cartel ya dice el lugar
+    const cuartos = w < 600 && st.cams.length > 4 ? [] : CUARTOS[st.lugar];
+    capa.innerHTML = cuartos.map(([n, e, x1, x2, z1, z2]) => { const [a, b] = pos((x1 + x2) / 2, 0.9, (z1 + z2) / 2 + (z1 < 0 ? 0.6 : -0.6)); return `<span class="et" style="left:${a}px;top:${b}px">${e} ${n}</span>`; }).join("")
+      + st.cams.map(c => `<span class="nc">${c.e} ${w < 600 ? c.s : c.t}</span>`).join("");
+    ubicarCarteles(w, h, st.cams.map(c => pos(c.x, 1.25, c.z)));
+  }
+  // Cada cartel va arriba de su cámara; si choca con otro cartel o con los recuadros del escenario,
+  // prueba a la derecha, a la izquierda, abajo y luego más lejos, sin salirse del escenario.
+  function ubicarCarteles(w, h, puntos) {
+    const base = caja.getBoundingClientRect();
+    const ocupados = [...caja.querySelectorAll(".et,.cobertura>div,.leyenda,.pista2:not([hidden]),.kit-ubicar:not([hidden])")]
+      .map(el => el.getBoundingClientRect()).filter(r => r.width)
+      .map(r => ({ x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height }));
+    const choca = a => ocupados.some(b => a.x < b.x + b.w + 3 && b.x < a.x + a.w + 3 && a.y < b.y + b.h + 2 && b.y < a.y + a.h + 2);
+    capa.querySelectorAll(".nc").forEach((el, i) => {
+      const [cx, cy] = puntos[i], ew = el.offsetWidth, eh = el.offsetHeight;
+      const centro = cx - ew / 2, medio = cy + 8 - eh / 2;
+      const pruebas = [[centro, cy - eh - 6], [cx + 14, medio], [cx - ew - 14, medio], [centro, cy + 16],
+        [cx + 14, cy - eh - 6], [cx - ew - 14, cy - eh - 6], [cx + 14, cy + 16], [cx - ew - 14, cy + 16],
+        [centro, cy - eh * 2 - 8], [centro, cy + eh + 18]];
+      const caja2 = ([x, y]) => ({ x: Math.min(Math.max(x, 4), w - ew - 4), y: Math.min(Math.max(y, 2), h - eh - 2), w: ew, h: eh });
+      const elegido = pruebas.map(caja2).find(r => !choca(r)) || caja2(pruebas[0]);
+      ocupados.push(elegido);
+      el.style.left = elegido.x + "px"; el.style.top = elegido.y + "px";
+    });
   }
   let visible = false;
   new IntersectionObserver(es => visible = es[0].isIntersecting).observe(caja);
@@ -196,15 +249,19 @@ function pintar() {
   $k("#kitIncluye").innerHTML = INCLUYE[st.con].map(x => `<li>${x}</li>`).join("");
   $k("#numV").textContent = st.n;
   $k("#numTxt").textContent = `${ni} interior${ni !== 1 ? "es" : ""} · ${ne} exterior${ne !== 1 ? "es" : ""}`;
+  const movidas = st.cams.some(c => c.movida);
+  $k("#kitUbicar").hidden = !movidas;
+  $k("#kitPista").hidden = movidas;
 }
 $$k("#kit .cards").forEach(g => g.addEventListener("click", e => {
   const b = e.target.closest(".card"); if (!b) return;
   g.querySelectorAll(".card").forEach(x => x.classList.toggle("on", x === b));
   st[g.dataset.g] = b.dataset.v;
-  if (g.dataset.g === "lugar") { construir(); st.cams.forEach(apuntar); }
-  pintar();
+  if (g.dataset.g === "lugar") { construir(); rehacer(true); }
+  else pintar();
 }));
 $k("#num").addEventListener("input", e => { st.n = +e.target.value; rehacer(); });
+$k("#kitUbicar").addEventListener("click", () => rehacer(true));
 
 $k("#kitAgregar").onclick = () => {
   const [ni, ne] = cuenta(), [pi, pe] = SUG[`${st.lugar}|${st.con}`];
@@ -215,10 +272,10 @@ $k("#kitAgregar").onclick = () => {
 $k("#kitWsp").onclick = () => {
   const [ni, ne] = cuenta(), [pi, pe] = SUG[`${st.lugar}|${st.con}`].map(porId);
   const lineas = [[pi, ni, "interior"], [pe, ne, "exterior"]].filter(x => x[1]).map(([p, k, t]) => `• ${k} × ${p.marca} ${p.modelo} (${p.nombre}, ${t})`);
-  abrirWsp(`Hola SYSAT, quiero cotizar un kit para mi ${st.lugar.toLowerCase()}:\n${lineas.join("\n")}\nTotal: ${st.n} cámaras ${st.con === "WiFi" ? "WiFi" : "con cable"}.\nIncluye: ${INCLUYE[st.con].join(", ")}.\n\n¿Me pueden dar precio con instalación?`);
+  abrirWsp(`Hola SYSAT, quiero cotizar un kit para mi ${st.lugar.toLowerCase()}:\n${lineas.join("\n")}\nTotal: ${st.n} cámaras ${st.con === "WiFi" ? "WiFi" : "con cable"}.\nDónde irían:\n${st.cams.map((c, i) => `${i + 1}. ${c.s} (${c.tipo === "in" ? "interior" : "exterior"})`).join("\n")}\nIncluye: ${INCLUYE[st.con].join(", ")}.\n\n¿Me pueden dar precio con instalación?`);
 };
 
 // en celular el botón flotante de WhatsApp se oculta mientras se ve el kit, para no tapar «Cotizar kit»
 new IntersectionObserver(es => document.body.classList.toggle("kit-visible", es[0].isIntersecting), { threshold: 0.35 }).observe($k("#kit"));
 
-construir(); rehacer();
+construir(); rehacer(true);
