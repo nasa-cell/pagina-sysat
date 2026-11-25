@@ -9,11 +9,20 @@
 </head>
 <body>
 
-<nav class="nav">
-  <a class="marca" href="index.html"><span class="logo"></span><span>SYSAT<small>Servicios en Tecnología</small></span></a>
-  <div class="enlaces">
-    <a href="catalogo.html">Catálogo</a><a href="#ofertas">Ofertas</a><a href="#kit">Arma tu kit</a><a href="#trabajos">Trabajos</a><a href="#contacto">Contacto</a>
-    <button class="btn-carrito" aria-label="Ver mi selección">🛒 <span class="txt">Mi selección</span> <span class="num">0</span></button>
+<nav class="barra-sitio" aria-label="Navegación principal">
+  <div class="barra-contenido">
+    <a class="marca" href="index.html"><span class="logo" aria-hidden="true"></span><span>SYSAT<small>Servicios en Tecnología</small></span></a>
+    <div class="enlaces">
+      <a href="index.html" aria-current="page">Inicio</a>
+      <a href="catalogo.html">Catálogo</a>
+      <a href="#ofertas">Ofertas</a>
+      <a href="#kit">Arma tu kit</a>
+      <a href="#trabajos">Trabajos</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+    <button class="btn-carrito" type="button" aria-label="Ver mi selección" aria-controls="panel">
+      <span aria-hidden="true">🛒</span><span class="txt">Mi selección</span><span class="num">0</span>
+    </button>
   </div>
 </nav>
 
@@ -27,6 +36,7 @@
     </div>
     <div class="lienzo" id="lienzo">
       <div class="globo" id="globo">Cargando cámaras 3D…</div>
+      <div class="vista3d"></div>
       <div class="controles" id="controles3d"><button data-b="noche">🌙 Visión nocturna</button><button data-b="foto">📸 Tomar foto</button></div>
       <div class="ficha3d" id="ficha3d"></div>
     </div>
@@ -34,19 +44,31 @@
 </header>
 
 <main class="cuerpo">
-  <section class="seccion">
+  <section class="seccion" id="productos-destacados">
     <div class="cabeza-sec"><div><h2>Productos destacados</h2><p class="sub">Toca <b>+</b> para agregarlos a tu selección. Precio solo por cotización.</p></div>
     <a class="btn-borde" href="catalogo.html">Ver catálogo completo ›</a></div>
     <div class="rejilla" id="destacados"></div>
+    <button class="btn-borde destacados-mas" type="button" id="masDestacados" aria-expanded="false" aria-controls="destacados">Ver más destacados</button>
   </section>
 
   <section class="seccion" id="ofertas">
-    <h2>Kits y ofertas</h2><p class="sub">Paquetes armados con instalación. Toca la del centro para verla grande.</p>
+    <h2>Kits y ofertas</h2>
+    <p class="sub">Paquetes armados con instalación. Toca un anuncio para ampliarlo.</p>
     <p class="nota-precio">💡 Los precios de las publicidades son <b>sugeridos</b>: confirma el precio final por WhatsApp.</p>
-    <div class="cover" id="cover" tabindex="0" aria-label="Carrusel de ofertas"><button class="nav ant" id="ofAnt" aria-label="Anterior">‹</button><button class="nav sig" id="ofSig" aria-label="Siguiente">›</button></div>
-    <div class="puntos" id="ofPuntos"></div>
-    <p class="of-tit" id="ofTit"></p>
-    <div class="bajo"><button class="btn-agregar" id="ofAgregar">+ Agregar este kit</button><button class="cotizar" id="ofWsp">Cotizar por WhatsApp</button></div>
+    <div class="ofertas-reproductor" role="group" aria-label="Carrusel de ofertas">
+      <div class="cover" id="cover"></div>
+      <div class="ofertas-navegacion">
+        <button type="button" id="ofAnt" aria-label="Oferta anterior" aria-controls="cover">‹</button>
+        <span class="of-contador" id="ofPuntos"></span>
+        <button type="button" id="ofSig" aria-label="Oferta siguiente" aria-controls="cover">›</button>
+        <button type="button" id="ofPausa" aria-controls="cover">Pausar</button>
+      </div>
+      <p class="of-tit" id="ofTit"></p>
+    </div>
+    <div class="bajo">
+      <button class="btn-agregar" type="button" id="ofAgregar">+ Agregar este kit</button>
+      <button class="cotizar" type="button" id="ofWsp">Cotizar por WhatsApp</button>
+    </div>
   </section>
 
   <section class="seccion">
@@ -85,24 +107,40 @@
   </section>
 
   <section class="seccion" id="trabajos">
-    <h2>Trabajos hechos</h2><p class="sub">Instalaciones reales de SYSAT. Toca una foto para verla grande.</p>
-    <div class="filtros" id="filtrosT"></div>
+    <div class="trabajos-cabecera">
+      <div>
+        <h2>Trabajos hechos</h2>
+        <p class="sub">Instalaciones reales de SYSAT. Toca una foto para verla grande.</p>
+      </div>
+      <details class="trabajos-menu" id="menuT">
+        <summary>
+          <span class="trabajos-menu-icono" aria-hidden="true"></span>
+          <span><small>Categoría</small><strong id="categoriaT">Todos los trabajos</strong></span>
+        </summary>
+        <div class="trabajos-filtros" id="filtrosT"></div>
+      </details>
+    </div>
     <div class="trabajos" id="listaT"></div>
+    <div class="trabajos-pie">
+      <p id="totalT" role="status"></p>
+      <button class="btn-borde" type="button" id="masT" aria-controls="listaT" hidden>Ver más fotos</button>
+    </div>
   </section>
 
   <section class="seccion" id="contacto">
     <h2>Contacto</h2><p class="sub">Escríbenos y te cotizamos sin compromiso.</p>
     <div class="contacto">
       <a id="enlaceWsp" href="#" target="_blank" rel="noopener"><span>WhatsApp</span><b id="numWsp"></b></a>
-      <a href="mailto:cotizaciones@sysatperu.com"><span>Correo</span>cotizaciones@sysatperu.com</a>
-      <a href="https://www.sysatperu.com" target="_blank" rel="noopener"><span>Web</span>www.sysatperu.com</a>
-      <a href="https://online.flipbuilder.com/SYSAT/ymnz/" target="_blank" rel="noopener"><span>Catálogo en línea</span>Catálogo SYSAT 2023</a>
+      <a href="mailto:cotizaciones@sysatperu.com"><span>Correo</span><b>cotizaciones@sysatperu.com</b></a>
+      <a href="https://www.sysatperu.com" target="_blank" rel="noopener"><span>Web</span><b>www.sysatperu.com</b></a>
+      <a href="https://online.flipbuilder.com/SYSAT/ymnz/" target="_blank" rel="noopener"><span>Catálogo en línea</span><b>Catálogo SYSAT 2023</b></a>
     </div>
   </section>
   <footer>SYSAT · Servicios en Tecnología · Cámaras, alarmas, intercomunicadores, redes y electricidad</footer>
 </main>
 
 <script src="codigo/datos.js"></script>
+<script src="codigo/seleccion-imagen.js"></script>
 <script src="codigo/comun.js"></script>
 <script src="codigo/inicio.js"></script>
 <script src="codigo/ofertas.js"></script>

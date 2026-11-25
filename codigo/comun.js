@@ -15,10 +15,24 @@ document.body.insertAdjacentHTML("beforeend", `
     <div class="total" id="totalCarrito"></div>
     <input id="nombreCliente" placeholder="Tu nombre (opcional)" autocomplete="name">
     <input id="lugarCliente" placeholder="Distrito o ciudad (opcional)">
-    <button class="btn-wsp" id="enviarWsp">${iconoWsp(22)} Enviar por WhatsApp</button>
+    <button class="btn-wsp" id="verResumen" type="button" aria-haspopup="dialog">${iconoWsp(22)} Ver resumen</button>
     <button class="vaciar" id="vaciar">Vaciar selección</button>
   </div>
 </aside>
+<dialog class="resumen-seleccion" id="resumenSeleccion" aria-labelledby="tituloResumen">
+  <header>
+    <h3 id="tituloResumen">Resumen de mi selección</h3>
+    <form method="dialog"><button class="cerrar-resumen" aria-label="Cerrar resumen">✕</button></form>
+  </header>
+  <div class="vista-resumen"><img id="imagenResumen" alt="Imagen con los equipos y cantidades de la solicitud"></div>
+  <footer>
+    <p id="ayudaResumen" role="status"></p>
+    <div class="acciones-resumen">
+      <button class="btn-wsp" type="button" id="enviarResumen">${iconoWsp(20)} Enviar por WhatsApp</button>
+      <a class="enlace-descarga" id="descargarResumen" download="seleccion-sysat.png">Descargar imagen</a>
+    </div>
+  </footer>
+</dialog>
 <div class="velo" id="velo"></div>
 <div class="aviso" id="aviso"></div>
 <div class="flotantes">
@@ -65,7 +79,7 @@ function pintarCarrito() {
       <button class="quitar" data-quitar="${id}">Quitar</button></div>`;
   }).join("") : `<div class="carrito-vacio"><b>🛒</b>Aún no elegiste productos.<br>Toca <b style="display:inline;font-size:inherit">+</b> en los que te interesen.</div>`;
   $("#totalCarrito").textContent = ids.length ? `${ids.length} producto${ids.length > 1 ? "s" : ""} · ${n} unidad${n > 1 ? "es" : ""}` : "";
-  $("#enviarWsp").disabled = !ids.length;
+  $("#verResumen").disabled = !ids.length;
   $("#vaciar").style.display = ids.length ? "" : "none";
 }
 $("#listaCarrito").addEventListener("click", e => {
@@ -73,16 +87,91 @@ $("#listaCarrito").addEventListener("click", e => {
   const q = e.target.closest("[data-quitar]"); if (q) { delete carrito[q.dataset.quitar]; guardar(); }
 });
 $("#vaciar").onclick = () => { carrito = {}; guardar(); };
-$("#enviarWsp").onclick = () => {
-  const ids = Object.keys(carrito); if (!ids.length) return;
-  const nombre = $("#nombreCliente").value.trim(), lugar = $("#lugarCliente").value.trim();
-  let t = `Hola SYSAT${nombre ? `, soy ${nombre}` : ""}. Quiero cotizar estos productos:\n\n`;
-  ids.forEach((id, i) => { const p = porId(id); t += p.kit ? `${i + 1}. ${carrito[id]} × ${p.nombre} (oferta de la web)\n` : `${i + 1}. ${carrito[id]} × ${p.marca} ${p.modelo} — ${p.nombre}\n`; });
-  t += `\nTotal: ${totalUnidades()} unidad(es).`;
-  if (lugar) t += `\nLugar de instalación: ${lugar}.`;
-  t += `\n¿Me pueden dar precio con instalación?`;
-  abrirWsp(t);
-};
+const resumen = $("#resumenSeleccion");
+const enviarResumen = $("#enviarResumen");
+const descargarResumen = $("#descargarResumen");
+const ayudaResumen = $("#ayudaResumen");
+const esCelular = matchMedia("(pointer:coarse)").matches;
+let archivoResumen;
+let urlResumen;
+let mensajeResumen = "";
+
+function abrirChatSysat(texto) {
+  const destino = esCelular
+    ? "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(texto)
+    : "https://web.whatsapp.com/send?phone=" + WHATSAPP + "&text=" + encodeURIComponent(texto);
+  window.open(destino, "_blank", "noopener");
+}
+
+$("#verResumen").addEventListener("click", () => {
+  const elementos = Object.entries(carrito).map(([id,cantidad]) => ({producto:porId(id),cantidad}));
+  if (!elementos.length || resumen.open) return;
+  const datos = {
+    nombre:$("#nombreCliente").value.trim(),
+    lugar:$("#lugarCliente").value.trim()
+  };
+  try {
+    archivoResumen = crearImagenSeleccion(elementos,datos);
+    urlResumen = URL.createObjectURL(archivoResumen);
+  } catch {
+    avisar("No se pudo generar la imagen. Inténtalo de nuevo.");
+    return;
+  }
+  $("#imagenResumen").src = urlResumen;
+  descargarResumen.href = urlResumen;
+  const saludo = datos.nombre ? "Hola SYSAT, soy " + datos.nombre + "." : "Hola SYSAT.";
+  mensajeResumen = saludo + " Les envío mi selección para cotizar con instalación.";
+  enviarResumen.disabled = false;
+  ayudaResumen.textContent = esCelular
+    ? "Toca el botón y elige WhatsApp para enviar la imagen a SYSAT."
+    : "Toca el botón: la imagen se copia sola y se abre el chat de SYSAT.";
+  resumen.showModal();
+});
+
+// Celular: menú Compartir con la imagen. PC: copia la imagen y abre WhatsApp Web.
+enviarResumen.addEventListener("click", async () => {
+  if (!archivoResumen) return;
+  enviarResumen.disabled = true;
+  try {
+    if (esCelular && navigator.canShare?.({files:[archivoResumen]})) {
+      try {
+        await navigator.share({files:[archivoResumen],text:mensajeResumen});
+      } catch (error) {
+        if (error.name !== "AbortError") abrirChatSysat(mensajeResumen);
+      }
+      return;
+    }
+    let copiada = false;
+    let causa = "este navegador no permite copiar imágenes";
+    if (navigator.clipboard?.write && window.ClipboardItem) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({"image/png":archivoResumen})]);
+        copiada = true;
+      } catch {
+        causa = location.protocol === "file:"
+          ? "la página está abierta como archivo; en la página publicada sí se copia"
+          : "el navegador bloqueó el portapapeles";
+      }
+    }
+    abrirChatSysat(mensajeResumen);
+    if (copiada) {
+      ayudaResumen.innerHTML = esCelular
+        ? "✔ <b>Imagen copiada.</b> En el chat mantén presionado, elige <b>Pegar</b> y Enviar."
+        : "✔ <b>Imagen copiada.</b> En el chat pulsa <b>Ctrl+V</b> y Enviar.";
+    } else {
+      descargarResumen.click();
+      ayudaResumen.textContent = "No se pudo copiar (" + causa + "). Se descargó la imagen: adjúntala en el chat.";
+    }
+  } finally {
+    enviarResumen.disabled = false;
+  }
+});
+resumen.addEventListener("close", () => {
+  $("#imagenResumen").removeAttribute("src");
+  descargarResumen.removeAttribute("href");
+  if (urlResumen) URL.revokeObjectURL(urlResumen);
+  urlResumen = archivoResumen = undefined;
+});
 function abrirPanel() { $("#panel").classList.add("abierto"); $("#sombra").classList.add("ver"); }
 function cerrarPanel() { $("#panel").classList.remove("abierto"); $("#sombra").classList.remove("ver"); }
 $("#cerrarPanel").onclick = cerrarPanel; $("#sombra").onclick = cerrarPanel;
@@ -130,7 +219,7 @@ function abrirDetalle(id) {
   const p = porId(id);
   $("#velo").innerHTML = `<div class="detalle" role="dialog" aria-label="${p.nombre}"><button class="cerrar" aria-label="Cerrar">✕</button>
     <div class="zoom"><img src="${fotoDe(p)}" alt="${p.nombre}"></div>
-    <div><span class="chip">${CATEGORIAS[p.cat]}</span><div class="m">${p.marca}</div><h2>${p.nombre}</h2><div class="mod">${p.modelo}</div>
+    <div class="detalle-info"><span class="chip">${CATEGORIAS[p.cat]}</span><div class="m">${p.marca}</div><h2>${p.nombre}</h2><div class="mod">${p.modelo}</div>
     <ul>${p.car.map(c => `<li>${c}</li>`).join("")}</ul>
     <div class="botones"><button class="btn-agregar" data-agregar="${p.id}">+ Agregar a mi selección</button>
     <button class="cotizar" data-cotizar="${p.id}">Cotizar por WhatsApp</button>
@@ -156,7 +245,7 @@ $("#velo").addEventListener("click", e => {
   const f = e.target.closest("[data-paso]"); if (f) pasoDetalle(+f.dataset.paso);
 });
 addEventListener("keydown", e => {
-  if (e.key === "Escape") { cerrarVelo(); cerrarPanel(); }
+  if (e.key === "Escape" && !resumen.open) { cerrarVelo(); cerrarPanel(); }
   if (!$("#velo").classList.contains("abierto") || !enDetalle) return;
   if (e.key === "ArrowRight") pasoDetalle(1);
   if (e.key === "ArrowLeft") pasoDetalle(-1);

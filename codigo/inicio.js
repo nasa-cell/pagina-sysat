@@ -6,7 +6,16 @@ h1.innerHTML = h1.textContent.trim().split(/\s+/).map((w, i) => `<span style="an
 
 /* destacados: dos por categoría principal */
 const destacados = ["hikvision-ds2cd2023g2-iu", "ezviz-c6", "ezviz-c8w", "hikvision-ds2de4225iw-de", "hikvision-ds2cd1327g0-luf", "ezviz-hb8", "hikvision-ds2ce56d0t-irpf", "grandstream-gds3710"].map(porId);
-pintarTarjetas($("#destacados"), destacados);
+const rejillaDestacados = $("#destacados");
+const masDestacados = $("#masDestacados");
+pintarTarjetas(rejillaDestacados, destacados);
+masDestacados.addEventListener("click", e => {
+  const expandido = rejillaDestacados.classList.toggle("expandido");
+  masDestacados.setAttribute("aria-expanded", String(expandido));
+  masDestacados.textContent = expandido ? "Ver menos destacados" : "Ver más destacados";
+  if (expandido && e.detail === 0) rejillaDestacados.children[4].querySelector(".ver").focus();
+  if (!expandido) masDestacados.scrollIntoView({block:"nearest"});
+});
 
 /* visión nocturna: barra que se arrastra */
 const noche = $("#noche");
@@ -27,18 +36,70 @@ const TRABAJOS = [
   ["suelos-01", "suelos"], ["suelos-02", "suelos"], ["suelos-03", "suelos"]
 ];
 const SERVICIOS = { camaras: "Cámaras", intercom: "Intercomunicadores", electrico: "Eléctrico", multimedia: "Multimedia", mantenimiento: "Mantenimiento y redes", suelos: "Estudios de suelos" };
-$("#filtrosT").innerHTML = `<button class="on" data-s="">Todos</button>` + Object.entries(SERVICIOS).map(([k, v]) => `<button data-s="${k}">${v}</button>`).join("");
-function pintarTrabajos(s) {
-  const lista = TRABAJOS.filter(t => !s || t[1] === s);
-  $("#listaT").innerHTML = lista.map(([f, k]) => `<figure class="aparece" data-foto="imagenes/trabajos/${f}.jpg" data-txt="${SERVICIOS[k]}"><img src="imagenes/trabajos/${f}.jpg" alt="Trabajo de ${SERVICIOS[k]}" loading="lazy"><figcaption>${SERVICIOS[k]}</figcaption></figure>`).join("");
-  $$("#listaT figure").forEach(mirar);
+const menuTrabajos = $("#menuT");
+const resumenTrabajos = menuTrabajos.querySelector("summary");
+const filtrosTrabajos = $("#filtrosT");
+const galeriaTrabajos = $("#listaT");
+const masTrabajos = $("#masT");
+const galeriaMovil = matchMedia("(max-width: 700px)");
+const categoriasTrabajos = { "": "Todos los trabajos", ...SERVICIOS };
+let trabajosFiltrados = TRABAJOS;
+
+filtrosTrabajos.innerHTML = Object.entries(categoriasTrabajos).map(([id, nombre]) =>
+  '<button type="button" data-categoria="' + id + '" aria-pressed="' + (id === "") + '">' + nombre + '</button>'
+).join("");
+
+function cargarTrabajos() {
+  const inicio = galeriaTrabajos.children.length;
+  const cantidad = galeriaMovil.matches ? 4 : 6;
+  const lote = trabajosFiltrados.slice(inicio, inicio + cantidad);
+  galeriaTrabajos.insertAdjacentHTML("beforeend", lote.map(([archivo, id]) => {
+    const foto = "imagenes/trabajos/" + archivo + ".jpg";
+    const servicio = SERVICIOS[id];
+    const numero = archivo.split("-").at(-1);
+    return `<figure>
+      <button class="trabajos-foto" type="button" data-foto="${foto}" data-txt="${servicio}" aria-label="Ampliar foto ${numero} de ${servicio}">
+        <img src="${foto}" alt="" loading="lazy">
+      </button>
+      <figcaption>${servicio}</figcaption>
+    </figure>`;
+  }).join(""));
+  const visibles = galeriaTrabajos.children.length;
+  $("#totalT").textContent = visibles + " de " + trabajosFiltrados.length + " fotos";
+  masTrabajos.hidden = visibles >= trabajosFiltrados.length;
+  return galeriaTrabajos.children[inicio]?.querySelector("button");
 }
-$("#filtrosT").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
-  $$("#filtrosT button").forEach(x => x.classList.toggle("on", x === b)); pintarTrabajos(b.dataset.s);
+
+filtrosTrabajos.addEventListener("click", e => {
+  const boton = e.target.closest("[data-categoria]");
+  if (!boton) return;
+  const categoria = boton.dataset.categoria;
+  filtrosTrabajos.querySelector('[aria-pressed="true"]').setAttribute("aria-pressed", "false");
+  boton.setAttribute("aria-pressed", "true");
+  $("#categoriaT").textContent = categoriasTrabajos[categoria];
+  trabajosFiltrados = categoria ? TRABAJOS.filter(([, id]) => id === categoria) : TRABAJOS;
+  galeriaTrabajos.replaceChildren();
+  cargarTrabajos();
+  menuTrabajos.open = false;
+  resumenTrabajos.focus();
 });
-$("#listaT").addEventListener("click", e => { const f = e.target.closest("figure"); if (f) verFoto(f.dataset.foto, f.dataset.txt); });
-pintarTrabajos("");
+menuTrabajos.addEventListener("keydown", e => {
+  if (e.key !== "Escape" || !menuTrabajos.open) return;
+  menuTrabajos.open = false;
+  resumenTrabajos.focus();
+});
+document.addEventListener("click", e => {
+  if (menuTrabajos.open && !menuTrabajos.contains(e.target)) menuTrabajos.open = false;
+});
+masTrabajos.addEventListener("click", e => {
+  const primeraNueva = cargarTrabajos();
+  if (e.detail === 0 || masTrabajos.hidden) primeraNueva?.focus();
+});
+galeriaTrabajos.addEventListener("click", e => {
+  const foto = e.target.closest("[data-foto]");
+  if (foto) verFoto(foto.dataset.foto, foto.dataset.txt);
+});
+cargarTrabajos();
 
 $("#numWsp").textContent = WHATSAPP.replace(/^51(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
 $("#enlaceWsp").href = `https://wa.me/${WHATSAPP}`;

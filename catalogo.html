@@ -9,11 +9,20 @@
 </head>
 <body>
 
-<nav class="nav">
-  <a class="marca" href="index.html"><span class="logo"></span><span>SYSAT<small>Servicios en Tecnología</small></span></a>
-  <div class="enlaces">
-    <a href="index.html">Inicio</a><a href="index.html#ofertas">Ofertas</a><a href="index.html#kit">Arma tu kit</a><a href="index.html#trabajos">Trabajos</a>
-    <button class="btn-carrito" aria-label="Ver mi selección">🛒 <span class="txt">Mi selección</span> <span class="num">0</span></button>
+<nav class="barra-sitio" aria-label="Navegación principal">
+  <div class="barra-contenido">
+    <a class="marca" href="index.html"><span class="logo" aria-hidden="true"></span><span>SYSAT<small>Servicios en Tecnología</small></span></a>
+    <div class="enlaces">
+      <a href="index.html">Inicio</a>
+      <a href="catalogo.html" aria-current="page">Catálogo</a>
+      <a href="index.html#ofertas">Ofertas</a>
+      <a href="index.html#kit">Arma tu kit</a>
+      <a href="index.html#trabajos">Trabajos</a>
+      <a href="index.html#contacto">Contacto</a>
+    </div>
+    <button class="btn-carrito" type="button" aria-label="Ver mi selección" aria-controls="panel">
+      <span aria-hidden="true">🛒</span><span class="txt">Mi selección</span><span class="num">0</span>
+    </button>
   </div>
 </nav>
 
@@ -23,6 +32,7 @@
   <div class="buscar">
     <input id="q" type="search" placeholder="Busca: solar, WiFi, domo, 4MP, DS-2CD…" aria-label="Buscar producto">
     <select id="marca" aria-label="Marca"><option value="">Todas las marcas</option></select>
+    <select id="categoriaCatalogo" class="categoria-catalogo" aria-label="Categoría"><option value="">Todas las categorías</option></select>
   </div>
   <div class="filtros" id="filtros"></div>
   <div class="conteo" id="conteo"></div>
@@ -31,6 +41,7 @@
 <footer>SYSAT · Servicios en Tecnología · <a href="https://online.flipbuilder.com/SYSAT/ymnz/" target="_blank" rel="noopener">Ver catálogo en línea</a></footer>
 
 <script src="codigo/datos.js"></script>
+<script src="codigo/seleccion-imagen.js"></script>
 <script src="codigo/comun.js"></script>
 <script src="codigo/catalogo.js"></script>
 </body>
